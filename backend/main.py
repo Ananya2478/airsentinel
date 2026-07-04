@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from agent import run_agent
-from aqi_tools import get_aqi_data, get_weather, get_fire_hotspots
+from aqi_tools import get_aqi_data, get_weather, get_fire_hotspots, get_global_stations, get_india_stations
 
 load_dotenv()
 
@@ -18,12 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Request models ────────────────────────────────────────────────
 class AgentQuery(BaseModel):
     question: str
     city: str = "Delhi"
-
-# ── Routes ───────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -31,15 +28,13 @@ def root():
 
 @app.get("/api/aqi")
 def aqi(city: str = "Delhi"):
-    """Fetch live AQI data for a city."""
     data = get_aqi_data(city)
     if not data:
-        raise HTTPException(status_code=404, detail="No AQI data found for this city")
+        raise HTTPException(status_code=404, detail="No AQI data found")
     return data
 
 @app.get("/api/weather")
 def weather(city: str = "Delhi"):
-    """Fetch wind and weather data for a city."""
     data = get_weather(city)
     if not data:
         raise HTTPException(status_code=404, detail="Weather data unavailable")
@@ -47,28 +42,20 @@ def weather(city: str = "Delhi"):
 
 @app.get("/api/fires")
 def fires(lat: float = 28.6, lon: float = 77.2, radius: float = 500):
-    """Fetch NASA FIRMS fire hotspots near a location."""
-    data = get_fire_hotspots(lat, lon, radius)
-    return data
+    return get_fire_hotspots(lat, lon, radius)
+
+@app.get("/api/global-stations")
+def global_stations():
+    """Fetch AQI for all global cities."""
+    return get_global_stations()
 
 @app.get("/api/india-stations")
 def india_stations():
-    """Fetch AQI readings from major Indian cities."""
-    cities = [
-        "Delhi", "Mumbai", "Kolkata", "Chennai", "Bangalore",
-        "Hyderabad", "Pune", "Ahmedabad", "Jaipur", "Lucknow",
-        "Kanpur", "Patna", "Bhopal", "Nagpur", "Surat"
-    ]
-    results = []
-    for city in cities:
-        data = get_aqi_data(city)
-        if data:
-            results.append(data)
-    return results
+    """Fetch AQI for Indian cities only."""
+    return get_india_stations()
 
 @app.post("/api/agent")
 def agent_query(body: AgentQuery):
-    """Run the AirSentinel agent with a natural language question."""
     try:
         result = run_agent(body.question, body.city)
         return {"answer": result, "city": body.city}

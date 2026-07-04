@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const API = "http://localhost:8000";
@@ -21,13 +21,13 @@ export default function App() {
   const [agentCity,  setAgentCity]  = useState("Delhi");
   const [agentQ,     setAgentQ]     = useState("");
   const [agentMsgs,  setAgentMsgs]  = useState([
-    { role:"assistant", text:"Hello! I'm AirSentinel. Ask me anything about air quality in India — 'Why is Delhi's AQI high today?', 'Is it safe to jog in Mumbai?', 'What is causing pollution in Kolkata?'" }
+    { role:"assistant", text:"Hello! I'm AirSentinel. Ask me anything about air quality anywhere in the world — 'Why is Beijing's AQI high today?', 'Is it safe to jog in London?', 'What is causing pollution in Delhi?'" }
   ]);
   const [agentBusy,  setAgentBusy]  = useState(false);
   const chatRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/api/india-stations`)
+    fetch(`${API}/api/global-stations`)
       .then(r => r.json())
       .then(d => { setStations(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -77,7 +77,7 @@ export default function App() {
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:30, height:30, background:"#1d4ed8", borderRadius:7, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:700, fontSize:14 }}>A</div>
           <span style={{ fontWeight:700, fontSize:16, color:"#111827" }}>AirSentinel</span>
-          <span style={{ fontSize:12, color:"#9ca3af", marginLeft:4 }}>India Air Quality Intelligence</span>
+          <span style={{ fontSize:12, color:"#9ca3af", marginLeft:4 }}>Global Air Quality Intelligence</span>
         </div>
         <nav style={{ display:"flex", gap:4 }}>
           {[["map","Live Map"],["agent","AI Agent"],["analytics","Analytics"]].map(([id,label]) => (
@@ -93,10 +93,10 @@ export default function App() {
       {stations.length > 0 && (
         <div style={{ background:"#fff", borderBottom:"1px solid #e5e7eb", padding:"10px 28px", display:"flex", gap:32, alignItems:"center" }}>
           <div style={{ fontSize:12, color:"#6b7280" }}>
-            <span style={{ fontWeight:600, color:"#111827", fontSize:14 }}>{stations.length}</span> cities monitored
+            <span style={{ fontWeight:600, color:"#111827", fontSize:14 }}>{stations.length}</span> cities monitored globally
           </div>
           <div style={{ fontSize:12, color:"#6b7280" }}>
-            National avg AQI: <span style={{ fontWeight:600, color: avgAqi>200?"#dc2626":avgAqi>100?"#d97706":"#059669", fontSize:14 }}>{avgAqi}</span>
+            Global avg AQI: <span style={{ fontWeight:600, color: avgAqi>200?"#dc2626":avgAqi>100?"#d97706":"#059669", fontSize:14 }}>{avgAqi}</span>
           </div>
           {worst && <div style={{ fontSize:12, color:"#6b7280" }}>
             Most polluted: <span style={{ fontWeight:600, color:"#dc2626" }}>{worst.city} ({worst.aqi})</span>
@@ -124,15 +124,14 @@ export default function App() {
 function MapPage({ stations, loading, selected, setSelected }) {
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"calc(100vh - 100px)", color:"#6b7280", fontSize:14 }}>
-      Loading live AQI data…
+      Loading global AQI data…
     </div>
   );
 
   return (
     <div style={{ display:"flex", height:"calc(100vh - 100px)" }}>
-      {/* Map */}
       <div style={{ flex:1, position:"relative" }}>
-        <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height:"100%", width:"100%" }}>
+        <MapContainer center={[20, 0]} zoom={2} style={{ height:"100%", width:"100%" }}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
@@ -141,13 +140,14 @@ function MapPage({ stations, loading, selected, setSelected }) {
             <CircleMarker
               key={s.city}
               center={[s.lat, s.lon]}
-              radius={Math.max(14, s.aqi / 18)}
+              radius={Math.max(10, s.aqi / 22)}
               pathOptions={{ fillColor:s.color, color:"#fff", weight:1.5, fillOpacity:0.85 }}
               eventHandlers={{ click: () => setSelected(s) }}
             >
               <Popup>
                 <div style={{ fontFamily:"system-ui", minWidth:160 }}>
-                  <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>{s.city}</div>
+                  <div style={{ fontWeight:700, fontSize:15, marginBottom:2 }}>{s.city}</div>
+                  <div style={{ fontSize:12, color:"#6b7280", marginBottom:4 }}>{s.country}</div>
                   <div style={{ fontSize:22, fontWeight:700, color:s.color }}>{s.aqi}</div>
                   <div style={{ fontSize:12, color:"#6b7280", marginBottom:6 }}>AQI — {s.category}</div>
                   <div style={{ fontSize:12 }}>PM2.5: {s.pm25} µg/m³</div>
@@ -179,11 +179,15 @@ function MapPage({ stations, loading, selected, setSelected }) {
           <>
             <div style={{ fontWeight:600, fontSize:14, marginBottom:14, color:"#111827" }}>All Cities</div>
             {[...stations].sort((a,b) => b.aqi - a.aqi).map(s => (
-              <div key={s.city} onClick={() => setSelected(s)} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid #f3f4f6", cursor:"pointer" }}
+              <div key={s.city} onClick={() => setSelected(s)}
+                style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid #f3f4f6", cursor:"pointer" }}
                 onMouseEnter={e => e.currentTarget.style.background="#fafafa"}
                 onMouseLeave={e => e.currentTarget.style.background="transparent"}>
                 <div style={{ width:10, height:10, borderRadius:"50%", background:s.color, flexShrink:0 }} />
-                <span style={{ flex:1, fontSize:13, fontWeight:500 }}>{s.city}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:500 }}>{s.city}</div>
+                  <div style={{ fontSize:11, color:"#9ca3af" }}>{s.country}</div>
+                </div>
                 <span style={{ fontSize:14, fontWeight:700, color:s.color }}>{s.aqi}</span>
                 <span style={{ fontSize:11, color:"#9ca3af" }}>{s.category}</span>
               </div>
@@ -219,7 +223,8 @@ function CityDetail({ city, onClose }) {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
         <div>
           <div style={{ fontWeight:700, fontSize:18 }}>{city.city}</div>
-          <div style={{ fontSize:12, color:"#6b7280", marginTop:2 }}>{city.station}</div>
+          <div style={{ fontSize:12, color:"#6b7280", marginTop:2 }}>{city.country}</div>
+          <div style={{ fontSize:11, color:"#9ca3af", marginTop:1 }}>{city.station}</div>
         </div>
         <div style={{ textAlign:"right" }}>
           <div style={{ fontSize:32, fontWeight:700, color:city.color, lineHeight:1 }}>{city.aqi}</div>
@@ -277,18 +282,26 @@ function CityDetail({ city, onClose }) {
 // Agent Page
 // ─────────────────────────────────────────────
 function AgentPage({ agentCity, setAgentCity, agentQ, setAgentQ, agentMsgs, agentBusy, askAgent, chatRef }) {
-  const cities = ["Delhi","Mumbai","Kolkata","Chennai","Bangalore","Hyderabad","Pune","Ahmedabad","Jaipur","Lucknow"];
+  const cities = [
+    "Delhi","Mumbai","Kolkata","Chennai","Bangalore","Hyderabad",
+    "Beijing","Tokyo","Seoul","Bangkok","Jakarta","Karachi","Dhaka",
+    "London","Paris","Berlin","Moscow","Istanbul",
+    "Cairo","Lagos","Nairobi",
+    "New York","Los Angeles","Mexico City","Sao Paulo",
+    "Sydney","Dubai"
+  ];
+
   const suggestions = [
     "Why is the AQI so high today?",
     "Is it safe for children to go to school?",
     "What is causing the pollution?",
     "What should elderly people do today?",
     "Are there any fires near this city?",
+    "How does this city compare to WHO guidelines?",
   ];
 
   return (
     <div style={{ display:"flex", height:"calc(100vh - 100px)" }}>
-      {/* Sidebar */}
       <div style={{ width:240, background:"#fff", borderRight:"1px solid #e5e7eb", padding:18, display:"flex", flexDirection:"column", gap:16 }}>
         <div>
           <div style={{ fontSize:11, fontWeight:600, color:"#9ca3af", textTransform:"uppercase", letterSpacing:".05em", marginBottom:8 }}>City Context</div>
@@ -299,7 +312,8 @@ function AgentPage({ agentCity, setAgentCity, agentQ, setAgentQ, agentMsgs, agen
         <div>
           <div style={{ fontSize:11, fontWeight:600, color:"#9ca3af", textTransform:"uppercase", letterSpacing:".05em", marginBottom:8 }}>Suggested Questions</div>
           {suggestions.map(s => (
-            <button key={s} onClick={() => setAgentQ(s)} style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"1px solid #e5e7eb", borderRadius:7, padding:"8px 10px", fontSize:12, color:"#374151", cursor:"pointer", marginBottom:6, lineHeight:1.4 }}
+            <button key={s} onClick={() => setAgentQ(s)}
+              style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"1px solid #e5e7eb", borderRadius:7, padding:"8px 10px", fontSize:12, color:"#374151", cursor:"pointer", marginBottom:6, lineHeight:1.4 }}
               onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"}
               onMouseLeave={e=>e.currentTarget.style.background="none"}>
               {s}
@@ -312,14 +326,14 @@ function AgentPage({ agentCity, setAgentCity, agentQ, setAgentQ, agentMsgs, agen
           • Wind & weather<br/>
           • NASA fire hotspots<br/>
           • Pollution source analysis<br/>
+          • WHO document search (RAG)<br/>
           • Health advisories
         </div>
       </div>
 
-      {/* Chat */}
       <div style={{ flex:1, display:"flex", flexDirection:"column" }}>
         <div style={{ padding:"12px 20px", borderBottom:"1px solid #e5e7eb", background:"#fff", fontSize:13, color:"#6b7280" }}>
-          Analysing air quality for <strong style={{ color:"#111827" }}>{agentCity}</strong> — powered by LangGraph + Groq
+          Analysing air quality for <strong style={{ color:"#111827" }}>{agentCity}</strong> — powered by LangChain + Groq LLaMA 3.3
         </div>
 
         <div ref={chatRef} style={{ flex:1, overflowY:"auto", padding:24, display:"flex", flexDirection:"column", gap:16 }}>
@@ -357,7 +371,8 @@ function AgentPage({ agentCity, setAgentCity, agentQ, setAgentQ, agentMsgs, agen
             placeholder={`Ask about air quality in ${agentCity}…`}
             style={{ flex:1, padding:"10px 14px", border:"1px solid #d1d5db", borderRadius:8, fontSize:14, color:"#111827", background:"#fff" }}
           />
-          <button className="btn" onClick={askAgent} disabled={agentBusy} style={{ background:"#1d4ed8", color:"#fff", padding:"10px 20px", opacity:agentBusy?.5:1 }}>
+          <button className="btn" onClick={askAgent} disabled={agentBusy}
+            style={{ background:"#1d4ed8", color:"#fff", padding:"10px 20px", opacity:agentBusy?0.5:1 }}>
             {agentBusy ? "…" : "Ask"}
           </button>
         </div>
@@ -370,40 +385,47 @@ function AgentPage({ agentCity, setAgentCity, agentQ, setAgentQ, agentMsgs, agen
 // Analytics Page
 // ─────────────────────────────────────────────
 function AnalyticsPage({ stations }) {
-  const sorted = [...stations].sort((a,b) => b.aqi - a.aqi);
+  const [filter, setFilter] = useState("All");
+  const countries = ["All", ...new Set(stations.map(s => s.country).filter(Boolean))].sort();
+  const filtered  = filter === "All" ? stations : stations.filter(s => s.country === filter);
+  const sorted    = [...filtered].sort((a,b) => b.aqi - a.aqi);
 
-  const categoryCount = stations.reduce((acc, s) => {
+  const categoryCount = filtered.reduce((acc, s) => {
     acc[s.category] = (acc[s.category]||0)+1;
     return acc;
   }, {});
-
   const catData = Object.entries(categoryCount).map(([name,count]) => ({ name, count, color: AQI_COLORS[name]||"#6b7280" }));
 
   return (
     <div style={{ padding:28 }}>
-      <h1 style={{ fontSize:20, fontWeight:700, marginBottom:4 }}>Analytics</h1>
-      <p style={{ fontSize:13, color:"#6b7280", marginBottom:24 }}>Air quality breakdown across 15 major Indian cities.</p>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
+        <div>
+          <h1 style={{ fontSize:20, fontWeight:700, marginBottom:4 }}>Analytics</h1>
+          <p style={{ fontSize:13, color:"#6b7280" }}>Air quality breakdown across {stations.length} cities in {new Set(stations.map(s=>s.country)).size} countries.</p>
+        </div>
+        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{ padding:"8px 12px", border:"1px solid #d1d5db", borderRadius:8, fontSize:13, background:"#fff" }}>
+          {countries.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:24 }}>
-        {/* Bar chart - AQI by city */}
         <div className="card" style={{ padding:20 }}>
           <div style={{ fontWeight:600, fontSize:14, marginBottom:16 }}>AQI by City (Ranked)</div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={sorted} layout="vertical" margin={{ left:60, right:20 }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={sorted.slice(0,20)} layout="vertical" margin={{ left:80, right:20 }}>
               <XAxis type="number" tick={{ fontSize:11 }} />
-              <YAxis type="category" dataKey="city" tick={{ fontSize:11 }} width={60} />
+              <YAxis type="category" dataKey="city" tick={{ fontSize:10 }} width={80} />
               <Tooltip formatter={(v) => [`AQI: ${v}`, ""]} />
               <Bar dataKey="aqi" radius={[0,4,4,0]}>
-                {sorted.map(s => <Cell key={s.city} fill={s.color} />)}
+                {sorted.slice(0,20).map(s => <Cell key={s.city} fill={s.color} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Category distribution */}
         <div className="card" style={{ padding:20 }}>
           <div style={{ fontWeight:600, fontSize:14, marginBottom:16 }}>AQI Category Distribution</div>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={catData}>
               <XAxis dataKey="name" tick={{ fontSize:11 }} />
               <YAxis tick={{ fontSize:11 }} />
@@ -416,13 +438,12 @@ function AnalyticsPage({ stations }) {
         </div>
       </div>
 
-      {/* Full data table */}
       <div className="card" style={{ overflow:"hidden" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #f3f4f6", fontWeight:600, fontSize:14 }}>Full Station Data</div>
         <table style={{ width:"100%", borderCollapse:"collapse" }}>
           <thead>
             <tr style={{ background:"#f9fafb" }}>
-              {["City","AQI","Category","PM2.5","PM10","NO2","O3","Risk","Source"].map(h => (
+              {["City","Country","AQI","Category","PM2.5","PM10","NO2","O3","Risk","Source"].map(h => (
                 <th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:11, fontWeight:600, color:"#6b7280", textTransform:"uppercase", letterSpacing:".04em", borderBottom:"1px solid #e5e7eb" }}>{h}</th>
               ))}
             </tr>
@@ -431,6 +452,7 @@ function AnalyticsPage({ stations }) {
             {sorted.map(s => (
               <tr key={s.city} style={{ borderBottom:"1px solid #f3f4f6" }}>
                 <td style={{ padding:"10px 14px", fontWeight:500, fontSize:13 }}>{s.city}</td>
+                <td style={{ padding:"10px 14px", fontSize:13, color:"#6b7280" }}>{s.country}</td>
                 <td style={{ padding:"10px 14px", fontWeight:700, fontSize:14, color:s.color }}>{s.aqi}</td>
                 <td style={{ padding:"10px 14px" }}><span style={{ background:s.color+"22", color:s.color, padding:"2px 8px", borderRadius:4, fontSize:11, fontWeight:500 }}>{s.category}</span></td>
                 <td style={{ padding:"10px 14px", fontSize:13, color:"#374151" }}>{s.pm25}</td>
@@ -445,7 +467,7 @@ function AnalyticsPage({ stations }) {
         </table>
       </div>
       <p style={{ fontSize:11, color:"#9ca3af", marginTop:12 }}>
-        Data sources: OpenAQ API · NASA FIRMS · OpenWeatherMap
+        Data sources: OpenAQ API · NASA FIRMS · OpenWeatherMap · WHO Air Quality Guidelines
       </p>
     </div>
   );
