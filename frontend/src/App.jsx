@@ -105,7 +105,7 @@ export default function App() {
             Cleanest: <span style={{ fontWeight:600, color:"#059669" }}>{best.city} ({best.aqi})</span>
           </div>}
           <div style={{ marginLeft:"auto", fontSize:11, color:"#9ca3af" }}>
-            Source: OpenAQ · NASA FIRMS · Updated live
+            Source: OpenAQ · NASA FIRMS · WHO · Updated live
           </div>
         </div>
       )}
