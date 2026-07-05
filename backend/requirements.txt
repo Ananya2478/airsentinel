@@ -1,5 +1,5 @@
 ﻿fastapi
-uvicorn[standard]
+uvicorn
 requests
 python-dotenv
 langchain
@@ -7,7 +7,7 @@ langchain-core
 langchain-groq
 groq
 chromadb
-pandas
+pandas==2.2.3
 numpy
 pydantic
 pypdf
