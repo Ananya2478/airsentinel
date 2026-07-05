@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const API = "http://localhost:8000";
+const API = "https://airsentinel-backend.onrender.com";
 
 const AQI_COLORS = {
   "Good":"#00c853","Satisfactory":"#ffd600","Moderate":"#ff6d00",
