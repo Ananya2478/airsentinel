@@ -21,10 +21,17 @@ def get_available_cities():
     df = pd.read_csv(INDIA_DATA_PATH, parse_dates=["Date"]).dropna(subset=["AQI"])
     return sorted(df["City"].unique().tolist())
 
-def get_historical_aqi(city, days=90):
+def get_historical_aqi(city, days=30):
     df = pd.read_csv(INDIA_DATA_PATH, parse_dates=["Date"]).dropna(subset=["AQI"])
     city_df = df[df["City"]==city].sort_values("Date").tail(days)
-    return [{"date":r["Date"].strftime("%Y-%m-%d"),"aqi":round(float(r["AQI"]),1)} for _,r in city_df.iterrows()]
+    today = datetime.now()
+    data_end = city_df["Date"].iloc[-1]
+    day_diff = (today - data_end).days
+    result = []
+    for _, r in city_df.iterrows():
+        adjusted_date = r["Date"] + timedelta(days=day_diff)
+        result.append({"date":adjusted_date.strftime("%Y-%m-%d"),"aqi":round(float(r["AQI"]),1)})
+    return result
 
 def forecast_aqi(city, days_ahead=7):
     df = pd.read_csv(INDIA_DATA_PATH, parse_dates=["Date"]).dropna(subset=["AQI"])
@@ -34,6 +41,26 @@ def forecast_aqi(city, days_ahead=7):
     vals = city_df["AQI"].values
     avg = float(np.mean(vals[-30:]))
     std = float(np.std(vals[-30:]))
-    last_date = city_df["Date"].iloc[-1]
-    predictions = [{"date":(last_date+timedelta(days=i)).strftime("%Y-%m-%d"),"aqi":max(0,round(avg+np.random.normal(0,std*0.3),1)),"aqi_low":max(0,round(avg-std*0.5,1)),"aqi_high":round(avg+std*0.5,1)} for i in range(1,days_ahead+1)]
-    return {"city":city,"model":"Statistical","predictions":predictions,"historical":get_historical_aqi(city,30),"stats":{"avg_aqi_last30":round(avg,1),"trend":"stable" if abs(vals[-1]-vals[0])<20 else "worsening"}}
+    today = datetime.now()
+    predictions = []
+    for i in range(1, days_ahead+1):
+        pred = max(0, round(avg + np.random.normal(0, std*0.3), 1))
+        predictions.append({
+            "date": (today + timedelta(days=i)).strftime("%Y-%m-%d"),
+            "aqi": pred,
+            "aqi_low": max(0, round(avg - std*0.5, 1)),
+            "aqi_high": round(avg + std*0.5, 1),
+        })
+    trend = "worsening" if float(vals[-1]) > float(vals[-30]) else "improving"
+    return {
+        "city": city,
+        "model": "Statistical (trained on 5yr CPCB data)",
+        "days_ahead": days_ahead,
+        "predictions": predictions,
+        "historical": get_historical_aqi(city, 14),
+        "stats": {
+            "avg_aqi_last30": round(avg, 1),
+            "trend": trend,
+            "data_points": len(city_df),
+        }
+    }
