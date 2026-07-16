@@ -59,7 +59,7 @@ Structured Response + Map Update
 ## Setup
 
 ### 1. Clone
-git clone https://github.com/Ananya3277/airsentinel.git
+git clone https://github.com/Ananya2478/airsentinel.git
 cd airsentinel
 
 ### 2. Backend
