@@ -1,5 +1,6 @@
 ﻿import os
 import requests
+import traceback
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -69,4 +70,6 @@ def agent_query(body: AgentQuery):
         result = run_agent(body.question, body.city)
         return {"answer": result, "city": body.city}
     except Exception as e:
+        error_detail = traceback.format_exc()
+        print(f"AGENT ERROR: {error_detail}")
         raise HTTPException(status_code=500, detail=str(e))
