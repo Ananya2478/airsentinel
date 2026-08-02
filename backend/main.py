@@ -1,4 +1,4 @@
-﻿import os
+import os
 import requests
 import traceback
 from fastapi import FastAPI, HTTPException
@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from agent import run_agent
+from langgraph_agent import run_langgraph_agent
 from aqi_tools import get_aqi_data, get_weather, get_fire_hotspots, get_global_stations, get_india_stations
 from forecast import forecast_aqi, get_available_cities, get_historical_aqi, get_global_aqi_stats
 
@@ -72,4 +73,13 @@ def agent_query(body: AgentQuery):
     except Exception as e:
         error_detail = traceback.format_exc()
         print(f"AGENT ERROR: {error_detail}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/agent/langgraph")
+def langgraph_query(body: AgentQuery):
+    try:
+        result = run_langgraph_agent(body.question, body.city)
+        return result
+    except Exception as e:
+        print(f"LANGGRAPH ERROR: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))

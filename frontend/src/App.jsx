@@ -16,7 +16,7 @@ export default function App() {
   const [loading,setLoading]=useState(true);
   const [agentCity,setAgentCity]=useState("Delhi");
   const [agentQ,setAgentQ]=useState("");
-  const [agentMsgs,setAgentMsgs]=useState([{role:"assistant",text:"Hello! I'm AirSentinel. Ask me anything about air quality anywhere in the world."}]);
+  const [agentMsgs,setAgentMsgs]=useState([{role:"assistant",text:"Hello! I'm AirSentinel. Ask me anything about air quality anywhere in the world — or just chat!"}]);
   const [agentBusy,setAgentBusy]=useState(false);
   const chatRef=useRef(null);
 
@@ -31,10 +31,12 @@ export default function App() {
     const q=agentQ.trim();setAgentQ("");
     setAgentMsgs(p=>[...p,{role:"user",text:q}]);setAgentBusy(true);
     try{
-      const r=await fetch(`${API}/api/agent`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,city:agentCity})});
+      const r=await fetch(`${API}/api/agent/langgraph`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,city:agentCity})});
       const d=await r.json();
-      setAgentMsgs(p=>[...p,{role:"assistant",text:d.answer||"Sorry, I couldn't process that."}]);
-    }catch{setAgentMsgs(p=>[...p,{role:"assistant",text:"Backend unavailable. Make sure FastAPI is running on port 8000."}]);}
+      setAgentMsgs(p=>[...p,{role:"assistant",text:d.answer||"Sorry, I couldn't process that.",tools:d.tools_used||[]}]);
+    }catch{
+      setAgentMsgs(p=>[...p,{role:"assistant",text:"Backend unavailable. Make sure FastAPI is running on port 8000."}]);
+    }
     setAgentBusy(false);
   }
 
@@ -193,7 +195,7 @@ function CityDetail({city,onClose}){
 
 function AgentPage({agentCity,setAgentCity,agentQ,setAgentQ,agentMsgs,agentBusy,askAgent,chatRef}){
   const cities=["Delhi","Mumbai","Kolkata","Chennai","Bangalore","Hyderabad","Pune","Ahmedabad","Jaipur","Lucknow","Beijing","Tokyo","Seoul","Bangkok","Jakarta","Karachi","Dhaka","London","Paris","Berlin","Moscow","Istanbul","Cairo","Lagos","Nairobi","New York","Los Angeles","Mexico City","Sao Paulo","Sydney","Dubai"];
-  const suggestions=["Why is the AQI so high today?","Is it safe for children to go to school?","What is causing the pollution?","What should elderly people do today?","Are there any fires near this city?","How does this city compare to WHO guidelines?"];
+  const suggestions=["Why is the AQI so high today?","Is it safe for children to go to school?","What is causing the pollution?","How many cigarettes = breathing Delhi air?","Are there any fires near this city?","How does AQI affect street food?"];
   return(
     <div style={{display:"flex",height:"calc(100vh - 100px)"}}>
       <div style={{width:240,background:"#fff",borderRight:"1px solid #e5e7eb",padding:18,display:"flex",flexDirection:"column",gap:16}}>
@@ -210,23 +212,35 @@ function AgentPage({agentCity,setAgentCity,agentQ,setAgentQ,agentMsgs,agentBusy,
           ))}
         </div>
         <div style={{marginTop:"auto",padding:"12px",background:"#eff6ff",borderRadius:8,fontSize:12,color:"#1e40af"}}>
-          <strong>Tools available:</strong><br/>• Live AQI data<br/>• Wind & weather<br/>• NASA fire hotspots<br/>• Pollution source analysis<br/>• WHO document search (RAG)<br/>• Health advisories
+          <strong>LangGraph Agent</strong><br/>
+          Tools available:<br/>
+          • Live AQI data<br/>
+          • Wind & weather<br/>
+          • NASA fire hotspots<br/>
+          • Pollution source analysis<br/>
+          • WHO document search (RAG)<br/>
+          • Health advisories
         </div>
       </div>
       <div style={{flex:1,display:"flex",flexDirection:"column"}}>
         <div style={{padding:"12px 20px",borderBottom:"1px solid #e5e7eb",background:"#fff",fontSize:13,color:"#6b7280"}}>
-          Analysing air quality for <strong style={{color:"#111827"}}>{agentCity}</strong> — powered by LangChain + Groq LLaMA 3.3
+          LangGraph agent — <strong style={{color:"#111827"}}>{agentCity}</strong> — powered by Groq LLaMA 3.3 70B
         </div>
         <div ref={chatRef} style={{flex:1,overflowY:"auto",padding:24,display:"flex",flexDirection:"column",gap:16}}>
           {agentMsgs.map((m,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start"}}>
               <div style={{maxWidth:"72%",background:m.role==="user"?"#1d4ed8":"#fff",color:m.role==="user"?"#fff":"#111827",border:m.role==="assistant"?"1px solid #e5e7eb":"none",padding:"12px 16px",borderRadius:10,fontSize:14,lineHeight:1.65,whiteSpace:"pre-wrap"}}>{m.text}</div>
+              {m.tools&&m.tools.length>0&&(
+                <div style={{marginTop:4,display:"flex",gap:4,flexWrap:"wrap"}}>
+                  {m.tools.map(t=><span key={t} style={{fontSize:10,background:"#eff6ff",color:"#1d4ed8",padding:"2px 6px",borderRadius:4,border:"1px solid #bfdbfe"}}>🔧 {t}</span>)}
+                </div>
+              )}
             </div>
           ))}
-          {agentBusy&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{background:"#fff",border:"1px solid #e5e7eb",padding:"12px 16px",borderRadius:10,fontSize:13,color:"#6b7280"}}>Fetching data and analysing…</div></div>}
+          {agentBusy&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{background:"#fff",border:"1px solid #e5e7eb",padding:"12px 16px",borderRadius:10,fontSize:13,color:"#6b7280"}}>Thinking and fetching data…</div></div>}
         </div>
         <div style={{padding:16,borderTop:"1px solid #e5e7eb",background:"#fff",display:"flex",gap:10}}>
-          <input value={agentQ} onChange={e=>setAgentQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&askAgent()} placeholder={`Ask about air quality in ${agentCity}…`} style={{flex:1,padding:"10px 14px",border:"1px solid #d1d5db",borderRadius:8,fontSize:14,color:"#111827",background:"#fff"}}/>
+          <input value={agentQ} onChange={e=>setAgentQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&askAgent()} placeholder={`Ask anything about ${agentCity} or any topic…`} style={{flex:1,padding:"10px 14px",border:"1px solid #d1d5db",borderRadius:8,fontSize:14,color:"#111827",background:"#fff"}}/>
           <button className="btn" onClick={askAgent} disabled={agentBusy} style={{background:"#1d4ed8",color:"#fff",padding:"10px 20px",opacity:agentBusy?0.5:1}}>{agentBusy?"…":"Ask"}</button>
         </div>
       </div>
@@ -339,25 +353,17 @@ function ForecastPage(){
           {cities.map(c=><option key={c} value={c}>{c}</option>)}
         </select>
       </div>
-
       {loading&&<div style={{textAlign:"center",padding:"60px 0",color:"#6b7280",fontSize:14}}>Loading forecast…</div>}
-
       {data&&!loading&&(
         <>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
-            {[
-              {label:"Latest AQI",val:data.historical?.slice(-1)[0]?.aqi||"—"},
-              {label:"7-Day Avg",val:data.predictions?Math.round(data.predictions.reduce((s,p)=>s+p.aqi,0)/data.predictions.length):"—"},
-              {label:"Trend",val:data.stats?.trend||"—"},
-              {label:"Model",val:data.model||"—"},
-            ].map(s=>(
+            {[{label:"Latest AQI",val:data.historical?.slice(-1)[0]?.aqi||"—"},{label:"7-Day Avg",val:data.predictions?Math.round(data.predictions.reduce((s,p)=>s+p.aqi,0)/data.predictions.length):"—"},{label:"Trend",val:data.stats?.trend||"—"},{label:"Model",val:data.model||"—"}].map(s=>(
               <div key={s.label} className="card" style={{padding:"16px 18px"}}>
                 <div style={{fontSize:11,color:"#6b7280",textTransform:"uppercase",letterSpacing:".05em",marginBottom:6}}>{s.label}</div>
                 <div style={{fontSize:18,fontWeight:600,color:"#111827"}}>{s.val}</div>
               </div>
             ))}
           </div>
-
           <div className="card" style={{padding:24,marginBottom:20}}>
             <div style={{fontWeight:600,fontSize:14,marginBottom:4}}>Historical + 7-Day Forecast — {city}</div>
             <div style={{fontSize:12,color:"#6b7280",marginBottom:16}}>Solid bars = historical · Dashed = forecast</div>
@@ -375,7 +381,6 @@ function ForecastPage(){
               })}
             </div>
           </div>
-
           <div className="card" style={{overflow:"hidden",marginBottom:16}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid #f3f4f6",fontWeight:600,fontSize:14}}>7-Day Forecast Detail</div>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
