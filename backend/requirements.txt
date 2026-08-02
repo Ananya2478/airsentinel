@@ -12,3 +12,5 @@ numpy
 pydantic
 pypdf
 scikit-learn
+
+langgraph
