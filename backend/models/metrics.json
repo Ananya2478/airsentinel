@@ -1,0 +1,132 @@
+{
+  "Ahmedabad": {
+    "mae": 39.76,
+    "rmse": 46.98,
+    "data_points": 1334
+  },
+  "Aizawl": {
+    "mae": 679.48,
+    "rmse": 890.04,
+    "data_points": 111
+  },
+  "Amaravati": {
+    "mae": 20.81,
+    "rmse": 23.89,
+    "data_points": 841
+  },
+  "Amritsar": {
+    "mae": 40.53,
+    "rmse": 77.31,
+    "data_points": 1126
+  },
+  "Bengaluru": {
+    "mae": 12.41,
+    "rmse": 15.01,
+    "data_points": 1910
+  },
+  "Bhopal": {
+    "mae": 72.49,
+    "rmse": 73.93,
+    "data_points": 278
+  },
+  "Brajrajnagar": {
+    "mae": 49.62,
+    "rmse": 59.37,
+    "data_points": 713
+  },
+  "Chandigarh": {
+    "mae": 17.7,
+    "rmse": 20.75,
+    "data_points": 299
+  },
+  "Chennai": {
+    "mae": 43.57,
+    "rmse": 49.87,
+    "data_points": 1884
+  },
+  "Coimbatore": {
+    "mae": 29.93,
+    "rmse": 33.22,
+    "data_points": 344
+  },
+  "Delhi": {
+    "mae": 30.19,
+    "rmse": 47.69,
+    "data_points": 1999
+  },
+  "Ernakulam": {
+    "mae": 131.95,
+    "rmse": 147.58,
+    "data_points": 153
+  },
+  "Gurugram": {
+    "mae": 39.98,
+    "rmse": 44.91,
+    "data_points": 1453
+  },
+  "Guwahati": {
+    "mae": 13.12,
+    "rmse": 17.82,
+    "data_points": 495
+  },
+  "Hyderabad": {
+    "mae": 15.38,
+    "rmse": 19.79,
+    "data_points": 1880
+  },
+  "Jaipur": {
+    "mae": 20.82,
+    "rmse": 28.02,
+    "data_points": 1094
+  },
+  "Jorapokhar": {
+    "mae": 28.07,
+    "rmse": 43.79,
+    "data_points": 771
+  },
+  "Kochi": {
+    "mae": 28.72,
+    "rmse": 32.65,
+    "data_points": 158
+  },
+  "Kolkata": {
+    "mae": 8.7,
+    "rmse": 10.64,
+    "data_points": 754
+  },
+  "Lucknow": {
+    "mae": 30.53,
+    "rmse": 41.41,
+    "data_points": 1893
+  },
+  "Mumbai": {
+    "mae": 8.59,
+    "rmse": 9.72,
+    "data_points": 775
+  },
+  "Patna": {
+    "mae": 17.25,
+    "rmse": 21.64,
+    "data_points": 1459
+  },
+  "Shillong": {
+    "mae": 7.59,
+    "rmse": 9.63,
+    "data_points": 205
+  },
+  "Talcher": {
+    "mae": 20.96,
+    "rmse": 24.54,
+    "data_points": 698
+  },
+  "Thiruvananthapuram": {
+    "mae": 13.98,
+    "rmse": 16.15,
+    "data_points": 1052
+  },
+  "Visakhapatnam": {
+    "mae": 25.25,
+    "rmse": 28.64,
+    "data_points": 1171
+  }
+}
