@@ -84,7 +84,7 @@ function MapPage({stations,loading,selected,setSelected}){
     <div style={{display:"flex",height:"calc(100vh - 100px)"}}>
       <div style={{flex:1,position:"relative"}}>
         <MapContainer center={[20,0]} zoom={2} style={{height:"100%",width:"100%"}}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://carto.com/">CARTO</a>'/>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           {stations.map(s=>(
             <CircleMarker key={s.city} center={[s.lat,s.lon]} radius={Math.max(10,s.aqi/22)} pathOptions={{fillColor:s.color,color:"#fff",weight:1.5,fillOpacity:0.85}} eventHandlers={{click:()=>setSelected(s)}}>
               <Popup>
