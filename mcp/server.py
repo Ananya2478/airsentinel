@@ -129,4 +129,4 @@ def get_global_stats() -> str:
         return f"Error: {e}"
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="stdio")
